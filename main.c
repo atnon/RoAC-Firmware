@@ -1,54 +1,8 @@
+#include <stdio.h>
 #include <avr/io.h>
-
-/* Leds */
-#define LEDREG	        PORTC
-#define LEDDDR	        DDRC
-#define LED1	        (1<<PC5)
-#define LED2	        (1<<PC4)
-#define LED3	        (1<<PC7)
-#define LED4	        (1<<PC6)
-#define LEDDDRBITS      (LED1 | LED2 | LED3 | LED4)
-
-/* Buttons */
-#define BTNREG	        PORTB
-#define BTNDDR	        DDRB
-#define BTN1	        (1<<PB0)	/* T0, PCINT8 */
-#define BTN2	        (1<<PB1)	/* T1, PCINT9 */
-
-/* Motor 1 */
-#define M1_REG			PORTA
-#define M1_DDR			DDRA
-#define M1_ENABLE		(1<<PA0)
-#define M1_DISABLE		(1<<PA1)
-#define M1_FAULT		(1<<PA2)	/* PCINT2 */
-#define M1_FEEDBACK		(1<<PA3)	/* ADC3 */
-#define M1_DDRBITS      (M1_ENABLE | M1_DISABLE)
-
-/* Motor 1 PWM */
-#define M1_PWMREG		PORTB
-#define M1_PWMDDR	    DDRB
-#define M1_IN1			(1<<PB3)	/* OC0A */
-#define M1_IN2			(1<<PB4)	/* OC0B */
-#define M1_IN1_DC       OCR0A       /* Duty Cycle */
-#define M1_IN2_DC       OCR0B       /* Duty Cycle */
-#define M1_PWMDDRBITS   (M1_IN1 | M1_IN2)
-/* Motor 2 */
-#define M2_REG			PORTA
-#define M2_DDR			DDRA
-#define M2_ENABLE		(1<<PA4)
-#define M2_DISABLE		(1<<PA5)
-#define M2_FAULT		(1<<PA6)	/* PCINT6 */
-#define M2_FEEDBACK		(1<<PA7)	/* ADC7 */
-#define M2_DDRBITS      (M2_ENABLE | M2_DISABLE) 
-
-/* Motor 2 PWM */
-#define M2_PWMREG		PORTD
-#define M2_PWMDDR	    DDRD
-#define M2_IN1			(1<<PD5)	/* OC1A */
-#define M2_IN2			(1<<PD4)	/* OC1B */
-#define M2_IN1_DC       OCR1A       /* Duty Cycle */
-#define M2_IN2_DC       OCR1B       /* Duty Cycle */
-#define M2_PWMDDRBITS   (M2_IN1 | M2_IN2)   
+#include <avr/interrupt.h>
+#include "serial.h"
+#include "config.h"
 
 static void initRegisters(void) {
     /* Setup Leds as outputs. */
@@ -118,7 +72,7 @@ static void setSpeedM1(int8_t speed) {
          * Set M1_IN1 to 0.
          * Set M1_IN2 to prefered duty cycle. */
         M1_IN1_DC = 0x00;
-        M1_IN2_DC = ((-speed)<<1)-1; /* Limit values 1:2:255 */
+        M1_IN2_DC = (((-speed)<<1)-1); /* Limit values 1:2:255 */
     } else {
         /* We're either at a speed of zero or out of bounds.
          * Set M1_IN1 and M1_IN2 to zero. */
@@ -127,8 +81,42 @@ static void setSpeedM1(int8_t speed) {
     }
 }
 
+static void setSpeedM2(int8_t speed) {
+    /* Function to set the speed and direction of M2.
+     * Positive speed => Forward.
+     * Negative speed => Reverse. 
+     *
+     * Note that the function maps the value ranges
+     * 1:1:127 => 2:2:254
+     * -1:1:-128 => 1:2:255
+     * due to how the int8_t is represented. */
+
+    if (speed > 0) {
+        /* Forward.
+         * Set M2_IN1 to prefered duty cycle.
+         * Set M2_IN2 to 0. */
+        M2_IN1_DC = (speed<<1); /* Limit values 2:2:254*/
+        M2_IN2_DC = 0x00;
+    } else if (speed < 0) {
+        /* Reverse.
+         * Set M2_IN1 to 0.
+         * Set M2_IN2 to prefered duty cycle. */
+        M2_IN1_DC = 0x00;
+        M2_IN2_DC = (((-speed)<<1)-1); /* Limit values 1:2:255 */
+    } else {
+        /* We're either at a speed of zero or out of bounds.
+         * Set M2_IN1 and M2_IN2 to zero. */
+        M2_IN1_DC = 0x00;
+        M2_IN2_DC = 0x00;
+    }
+}
+
 int main(void)
 {
+    Serial_Init();
+    sei();
+    printf("Meh");
+    LEDREG |= LED1;
     while(1)
     {
         //TODO:: Please write your application code 

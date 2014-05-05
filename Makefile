@@ -6,7 +6,7 @@ MCU_TARGET     = atmega324pa
 AVRDUDE_TARGET = atmega324pa
 OPTIMIZE       = -Os
 DEFS           =
-LIBS           =
+LIBS           = serial.c uart.c
 
 HZ          = 20000000
 
