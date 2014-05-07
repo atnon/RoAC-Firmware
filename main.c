@@ -222,7 +222,7 @@ void cmdSet(uint8_t *bufPtr) {
 
     len = getEndOfPart(strPtr);
     if(strPtr[0] == 0x2D) { /* ASCII 2D = - (dash). */
-        /* Let's handle negative values. 
+        /* Let's handle negative values.
          * This would be better to handle in astring.c. */
         strPtr++; /* Jump the pesky dash. */
         value = getInteger(strPtr, len-1);
@@ -234,6 +234,49 @@ void cmdSet(uint8_t *bufPtr) {
     }
 
     setProperty(result, value);
+}
+
+void cmdGet(uint8_t *bufPtr) {
+    /* Command to fetch values of various properties.
+     * TODO: Implement actual procedures to get values.*/
+    uint8_t *strPtr = bufPtr;
+    
+    /* Make sure another parameter is coming. */
+    if(strPtr[0] != 0x20) { uart_puts_P("Error: Get requires a property to fetch.\r\n"); return; }
+    strPtr++; /* Jump space. */
+    
+    uint8_t len = getEndOfPart(strPtr);
+    uint8_t result = (uint8_t)compareStrs(strPtr, cmdPropList, len, 1);
+    
+    switch(result) {
+        case 1: 
+            /* m1speed */
+            break;
+        case 2: 
+            /* m2speed */
+            break;
+        case 3: 
+            /* m1disable */
+            break;
+        case 4: 
+            /* m2disable */
+            break;
+        case 5:
+            /* led1 */
+            break;
+        case 6: 
+            /* led2 */
+            break;
+        case 7: 
+            /* led3 */
+            break;
+        case 8: 
+            /* led4 */
+            break;
+        default:
+            /* Invalid command. */
+            uart_puts_P("Error: Invalid property.\r\n");
+    }
 }
 
 void setProperty(uint8_t propIndex, int8_t value) {
