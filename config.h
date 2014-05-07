@@ -38,7 +38,8 @@
    #define M1_IN1_DC       OCR0A       /* Duty Cycle */
    #define M1_IN2_DC       OCR0B       /* Duty Cycle */
    #define M1_PWMDDRBITS   (M1_IN1 | M1_IN2)
-   /* Motor 2 */
+   
+    /* Motor 2 */
    #define M2_REG          PORTA
    #define M2_DDR          DDRA
    #define M2_ENABLE       (1<<PA4)
