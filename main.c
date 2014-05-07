@@ -34,18 +34,18 @@ static void initPwm(void) {
     /* Mode 1 - Phase Correct PWM. */
     TCCR0A |= (1<<WGM00);
     /* Prescaler selection.
-     * Our frequency is 20e6/8=2.5MHz.
+     * Our frequency is 20MHz.
      * Frequency of PWM should be ~10kHz.
-     * Thus, a prescaler of 256 should do => CS02=1. Ref p. 107 */
-    TCCR0B |= (1<<CS02);
+     * Thus, a prescaler of 1024 will have to do => CS00=CS02=1. Ref p. 107 */
+    TCCR0B |= ((1<<CS02) | (1<<CS00));
 
     /* Init Timer 1 associated with OC1A/B.
      * Same settings apply, even if timer 1 is a 16-bit timer.
      * Mode 1 - PWM, Phase Correct, 8-bit. */
     TCCR1A |= (1<<WGM10);
-    /* Analogous to the timer 0 case, we set a prescaler of 256.
-     * Thus, CS12=1. */
-    TCCR1B |= (1<<CS12);
+    /* Analogous to the timer 0 case, we set a prescaler of 1024.
+     * Thus, CS10=CS12=1. */
+    TCCR1B |= ((1<<CS10) | (1<<CS12));
     
     /* Set PWM ports as outputs. */
     M1_PWMDDR |= M1_PWMDDRBITS;
