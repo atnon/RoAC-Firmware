@@ -1,12 +1,12 @@
 PRG            = main
-OBJ            = main.o
+OBJ            = main.o serial.o uart.o astring.o
 PROGRAMMER     = avrispmkII
 PORT           = usb
 MCU_TARGET     = atmega324pa 
 AVRDUDE_TARGET = atmega324pa
 OPTIMIZE       = -Os
 DEFS           =
-LIBS           = serial.c uart.c
+LIBS           = 
 
 HZ          = 20000000
 
