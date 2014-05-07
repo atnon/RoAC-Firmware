@@ -83,7 +83,7 @@ static void setSpeedM1(int8_t speed) {
 }
 
 static void setSpeedM2(int8_t speed) {
-    /* Function to set the speed and direction of M2.
+    /* Function to set the speed and direction of M2 (rotated motor).
      * Positive speed => Forward.
      * Negative speed => Reverse. 
      *
@@ -92,18 +92,18 @@ static void setSpeedM2(int8_t speed) {
      * -1:1:-128 => 1:2:255
      * due to how the int8_t is represented. */
 
-    if (speed > 0) {
+    if (speed < 0) {
         /* Forward.
          * Set M2_IN1 to prefered duty cycle.
          * Set M2_IN2 to 0. */
-        M2_IN1_DC = (speed<<1); /* Limit values 2:2:254*/
+        M2_IN1_DC = (((-speed)<<1)-1); /* Limit values 1:2:255 */
         M2_IN2_DC = 0x00;
-    } else if (speed < 0) {
+    } else if (speed > 0) {
         /* Reverse.
          * Set M2_IN1 to 0.
          * Set M2_IN2 to prefered duty cycle. */
+        M2_IN2_DC = (speed<<1); /* Limit values 2:2:254*/
         M2_IN1_DC = 0x00;
-        M2_IN2_DC = (((-speed)<<1)-1); /* Limit values 1:2:255 */
     } else {
         /* We're either at a speed of zero or out of bounds.
          * Set M2_IN1 and M2_IN2 to zero. */
@@ -285,11 +285,13 @@ int main(void)
     uint8_t motorOn = 0x0;
 
     setEnableM1(1);
+    setEnableM2(1);
     uint8_t buffer[127];
     uint8_t bufLength = 128;
     uint8_t bufHead = 0;
     while(1)
     {
+        LEDREG |= LED1;
         character = uartWorker();
         if((character == '\n') || (character == '\r')) { 
             /* Set null terminator for detection of end of string. */
