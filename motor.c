@@ -23,9 +23,9 @@ void initPwm(void) {
     TCCR0A |= (1<<WGM00);
     /* Prescaler selection.
      * Our frequency is 20MHz.
-     * Frequency of PWM should be ~10kHz.
-     * Thus, a prescaler of 1024 will have to do => CS00=CS02=1. Ref p. 107 */
-    TCCR0B |= ((1<<CS02) | (1<<CS00));
+     * A prescaler of /256 gives a somewhat pleasant motor sound.
+     * Clock selection ref p. 107 */
+    TCCR0B |= (1<<CS02);
 
     /* Init Timer 1 associated with OC1A/B.
      * Same settings apply, even if timer 1 is a 16-bit timer.
@@ -33,11 +33,17 @@ void initPwm(void) {
     TCCR1A |= (1<<WGM10);
     /* Analogous to the timer 0 case, we set a prescaler of 1024.
      * Thus, CS10=CS12=1. */
-    TCCR1B |= ((1<<CS10) | (1<<CS12));
+    TCCR1B |= (1<<CS12);
     
     /* Set PWM ports as outputs. */
     M1_PWMDDR |= M1_PWMDDRBITS;
     M2_PWMDDR |= M2_PWMDDRBITS;
+
+#if DISABLE_PWM
+        /* The motor should be disabled at start. */
+        M1_PWM_DC = 0xFF;
+        M2_PWM_DC = 0xFF;
+#endif /* DISABLE_PWM */
 } 
 
 void setSpeedM1(int8_t speed) {
