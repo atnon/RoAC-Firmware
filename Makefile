@@ -1,5 +1,5 @@
 PRG            = main
-OBJ            = main.o uart.o astring.o motor.o
+OBJ            = main.o uart.o astring.o motor.o cmd.o adc.o
 PROGRAMMER     = avrispmkII
 PORT           = usb
 MCU_TARGET     = atmega324pa 
