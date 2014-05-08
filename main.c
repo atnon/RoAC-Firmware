@@ -1,3 +1,4 @@
+#include <stdio.h>
 #include <avr/io.h>
 #include <avr/interrupt.h>
 #include <avr/pgmspace.h>
@@ -50,7 +51,55 @@ static void initPwm(void) {
     /* Set PWM ports as outputs. */
     M1_PWMDDR |= M1_PWMDDRBITS;
     M2_PWMDDR |= M2_PWMDDRBITS;
-}                
+}    
+
+static void initAdc(void) {
+    /* Setups the ADC for use. 
+     * Sets the ADC in Free Running Mode and enables ues of interrupts. */
+
+    /* Select the 2.56V internal reference. */
+    ADMUX |= ((1<<REFS1) | (1<<REFS0));
+
+    /* Using the largest ADC prescaler (/128) since time is not an issue. */
+    ADCSRA |= ((1<<ADPS2) | (1<<ADPS1) | (1<<ADPS0));
+ 
+    /* Enable the ADC and Interrupt Enable. */
+    ADCSRA |= (1<<ADEN) | (1<<ADIE);
+    
+    /* Disable the digital part of the feedback pins. */
+    DIDR0 |= (M1_FEEDBACK | M2_FEEDBACK);
+    
+    /* Start with Motor 1 Feedback for first conversion. */
+    ADMUX |= M1_FEEDBACKADC;
+    
+    /* Start conversion. */
+    ADCSRA |= (1<<ADSC);
+}
+static uint16_t getADCVal(void) {
+    /* Function to fetch the value of the ADC register.*/
+
+    uint8_t lsb = ADCL; /* Read ADC LSB. */
+    uint8_t msb = ADCH;
+    return (((uint16_t)(msb)<<8) | lsb);
+}
+
+uint8_t curAdc = M1_FEEDBACKADC;
+uint16_t lastAdcValM1;
+uint16_t lastAdcValM2;
+ISR(ADC_vect) {
+    if ((ADMUX & 0x1F) == M1_FEEDBACKADC) {
+        lastAdcValM1 = getADCVal();
+        curAdc = M2_FEEDBACKADC; /* Set M2 ADC for next conversion. */
+    } else if ((ADMUX & 0x1F) == M2_FEEDBACKADC) {
+        lastAdcValM2 = getADCVal();
+        curAdc = M1_FEEDBACKADC; /* Set M1 ADC for next conversion. */
+    }
+    ADMUX &= ~0x1F; /* Set MUX4..0 to zero. */
+    ADMUX |= (0x1F & curAdc); /* Set M2 ADC for next conversion. */
+    ADCSRA |= (1<<ADSC); /* Start conversion. */
+    LEDREG ^= LED2;
+
+}
 
 static void setSpeedM1(int8_t speed) {
     /* Function to set the speed and direction of M1.
@@ -188,6 +237,8 @@ static char *cmdPropList[] = {
     "led2",
     "led3",
     "led4",
+    "m1current",
+    "m2current",
     '\0'
 };
 
@@ -199,7 +250,7 @@ void cmdParser(uint8_t *bufPtr) {
     strPtr += len;
     switch(result) {
         case 1: cmdSet(strPtr); break;
-        case 2: uart_puts_P("Got getter\r\n"); break;
+        case 2: cmdGet(strPtr); break;
         default: uart_puts_P("Invalid command\r\n");
     }
 }
@@ -238,7 +289,7 @@ void cmdSet(uint8_t *bufPtr) {
 
 void cmdGet(uint8_t *bufPtr) {
     /* Command to fetch values of various properties.
-     * TODO: Implement actual procedures to get values.*/
+     * Implement actual procedures to get values.*/
     uint8_t *strPtr = bufPtr;
     
     /* Make sure another parameter is coming. */
@@ -251,27 +302,43 @@ void cmdGet(uint8_t *bufPtr) {
     switch(result) {
         case 1: 
             /* m1speed */
+            uartPutHex(M1_IN1_DC | M1_IN2_DC);
             break;
         case 2: 
             /* m2speed */
+            uartPutHex(M2_IN1_DC | M2_IN2_DC);
             break;
         case 3: 
             /* m1disable */
+            uartPutHex(0x1&(M1_PIN>>PA1));
             break;
         case 4: 
             /* m2disable */
+            uartPutHex(0x1&(M2_PIN>>PA5));
             break;
         case 5:
             /* led1 */
+            uart_puts_P("Error: Not Implemented.\r\n"); /* TODO */
             break;
         case 6: 
             /* led2 */
+            uart_puts_P("Error: Not Implemented.\r\n"); /* TODO */
             break;
         case 7: 
             /* led3 */
+            uart_puts_P("Error: Not Implemented.\r\n"); /* TODO */
             break;
         case 8: 
             /* led4 */
+            uart_puts_P("Error: Not Implemented.\r\n"); /* TODO */
+            break;
+        case 9:
+            /* m1current */
+            uartPutHex(lastAdcValM1);
+            break;
+        case 10:
+            /* m2current */
+            uartPutHex(lastAdcValM2);
             break;
         default:
             /* Invalid command. */
@@ -299,15 +366,27 @@ void setProperty(uint8_t propIndex, int8_t value) {
             break;
         case 5:
             /* led1 */
+            uart_puts_P("Error: Not Implemented.\r\n"); /* TODO */
             break;
         case 6: 
             /* led2 */
+            uart_puts_P("Error: Not Implemented.\r\n"); /* TODO */
             break;
         case 7: 
             /* led3 */
+            uart_puts_P("Error: Not Implemented.\r\n"); /* TODO */
             break;
         case 8: 
             /* led4 */
+            uart_puts_P("Error: Not Implemented.\r\n"); /* TODO */
+            break;
+        case 9:
+            /* m1current */
+            uart_puts_P("Error: Non-valid Action.\r\n");
+            break;
+        case 10:
+            /* m2current */
+            uart_puts_P("Error: Non-valid Action.\r\n");
             break;
         default: 
             /* Invalid command. */
@@ -315,18 +394,27 @@ void setProperty(uint8_t propIndex, int8_t value) {
     }
 }
 
+void uartPutHex(uint16_t num) {
+    uint8_t buf[4];
+    sprintf(buf, "%X", num);
+    uart_puts_P("0x");
+    uart_puts(buf);
+    uart_puts_P("\r\n");
+}
+
+
 int main(void)
 {
     initRegisters();
     initPwm();
     uart_init((UART_BAUD_SELECT((SERIAL_BAUDRATE), F_CPU)));
     sei();
+    initAdc();
     uart_puts_P("Welcome to the Robot of Awesome Controller terminal\r\n");
     uart_puts_P("# ");
     LEDREG |= LED1;
     uint8_t character;
-    uint8_t motorOn = 0x0;
-
+    
     setEnableM1(1);
     setEnableM2(1);
     uint8_t buffer[127];
@@ -334,7 +422,6 @@ int main(void)
     uint8_t bufHead = 0;
     while(1)
     {
-        LEDREG |= LED1;
         character = uartWorker();
         if((character == '\n') || (character == '\r')) { 
             /* Set null terminator for detection of end of string. */

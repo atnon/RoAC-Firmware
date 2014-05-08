@@ -24,10 +24,12 @@
     /* Motor 1 */
     #define M1_REG          PORTA
     #define M1_DDR          DDRA
+    #define M1_PIN          PINA
     #define M1_ENABLE       (1<<PA0)
     #define M1_DISABLE      (1<<PA1)
     #define M1_FAULT        (1<<PA2)    /* PCINT2 */
     #define M1_FEEDBACK     (1<<PA3)    /* ADC3 */
+    #define M1_FEEDBACKADC  3
     #define M1_DDRBITS      (M1_ENABLE | M1_DISABLE)
    
     /* Motor 1 PWM */
@@ -42,10 +44,12 @@
     /* Motor 2 */
     #define M2_REG          PORTA
     #define M2_DDR          DDRA
+    #define M2_PIN          PINA
     #define M2_ENABLE       (1<<PA4)
     #define M2_DISABLE      (1<<PA5)
     #define M2_FAULT        (1<<PA6)    /* PCINT6 */
     #define M2_FEEDBACK     (1<<PA7)    /* ADC7 */
+    #define M2_FEEDBACKADC  7
     #define M2_DDRBITS      (M2_ENABLE | M2_DISABLE) 
    
     /* Motor 2 PWM */
