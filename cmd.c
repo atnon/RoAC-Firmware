@@ -88,19 +88,35 @@ void cmdGet(uint8_t *bufPtr) {
     switch(result) {
         case 1: 
             /* m1speed */
+#if DISABLE_PWM
+            uartPutHex(M1_PWM_DC);
+#else
             uartPutHex(M1_IN1_DC | M1_IN2_DC);
+#endif /* DISABLE_PWM */
             break;
         case 2: 
             /* m2speed */
+#if DISABLE_PWM
+            uartPutHex(M2_PWM_DC);
+#else
             uartPutHex(M2_IN1_DC | M2_IN2_DC);
+#endif /* DISABLE_PWM */
             break;
         case 3: 
             /* m1disable */
+#if DISABLE_PWM
+            uart_puts_P("Error: Not implemented\r\n");
+#else
             uartPutHex(0x1&(M1_PIN>>PA1));
+#endif /* DISABLE_PWM */
             break;
         case 4: 
             /* m2disable */
+#if DISABLE_PWM
+            uart_puts_P("Error: Not implemented\r\n");
+#else
             uartPutHex(0x1&(M2_PIN>>PA5));
+#endif /* DISABLE_PWM */
             break;
         case 5:
             /* led1 */

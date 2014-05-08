@@ -51,22 +51,45 @@ void setSpeedM1(int8_t speed) {
      * due to how the int8_t is represented. */
 
     if (speed > 0) {
-        /* Forward.
-         * Set M1_IN1 to prefered duty cycle.
+        /* Forward. */
+
+#if DISABLE_PWM
+        /* Set M1_IN1 high, M1_IN2 low. */
+        M1_REG |= M1_IN1;
+        M1_PWMREG &= ~(M1_IN2);
+        M1_PWM_DC = (speed<<1);
+#else
+        /* Set M1_IN1 to prefered duty cycle.
          * Set M1_IN2 to 0. */
         M1_IN1_DC = (speed<<1); /* Limit values 2:2:254*/
         M1_IN2_DC = 0x00;
+#endif /* DISABLE_PWM */
+
     } else if (speed < 0) {
-        /* Reverse.
-         * Set M1_IN1 to 0.
+        /* Reverse. */
+#if DISABLE_PWM
+        /* Set M1_IN2 high, M1_IN1 low. */
+        M1_REG &= ~(M1_IN1);
+        M1_PWMREG |= M1_IN2;
+        M1_PWM_DC = (((-speed)<<1)-1); /* Limit values 1:2:255 */
+#else
+        /* Set M1_IN1 to 0.
          * Set M1_IN2 to prefered duty cycle. */
         M1_IN1_DC = 0x00;
         M1_IN2_DC = (((-speed)<<1)-1); /* Limit values 1:2:255 */
+#endif /* DISABLE_PWM */
+
     } else {
-        /* We're either at a speed of zero or out of bounds.
-         * Set M1_IN1 and M1_IN2 to zero. */
+        /* We're either at a speed of zero or out of bounds. */
+#if DISABLE_PWM
+        /* Simply disable the motor all of the time. */
+        M1_PWM_DC = 0x00;
+#else
+        /* Set M1_IN1 and M1_IN2 to zero. */
         M1_IN1_DC = 0x00;
         M1_IN2_DC = 0x00;
+#endif /* DISABLE_PWM */
+
     }
 }
 
@@ -81,22 +104,41 @@ void setSpeedM2(int8_t speed) {
      * due to how the int8_t is represented. */
 
     if (speed < 0) {
-        /* Forward.
-         * Set M2_IN1 to prefered duty cycle.
+        /* Forward. */
+#if DISABLE_PWM
+        /* Set M1_IN2 high, M1_IN1 low. */
+        M2_REG &= ~(M2_IN1);
+        M2_PWMREG |= M2_IN2;
+        M2_PWM_DC = (((-speed)<<1)-1); /* Limit values 1:2:255 */
+#else
+        /* Set M2_IN1 to prefered duty cycle.
          * Set M2_IN2 to 0. */
         M2_IN1_DC = (((-speed)<<1)-1); /* Limit values 1:2:255 */
         M2_IN2_DC = 0x00;
+#endif /* DISABLE_PWM */
     } else if (speed > 0) {
-        /* Reverse.
-         * Set M2_IN1 to 0.
+        /* Reverse. */
+#if DISABLE_PWM
+        /* Set M1_IN1 high, M1_IN2 low. */
+        M2_REG |= M2_IN1;
+        M2_PWMREG &= ~(M2_IN2);
+        M2_PWM_DC = (speed<<1);
+#else
+        /* Set M2_IN1 to 0.
          * Set M2_IN2 to prefered duty cycle. */
         M2_IN2_DC = (speed<<1); /* Limit values 2:2:254*/
         M2_IN1_DC = 0x00;
+#endif /* DISABLE_PWM */
     } else {
-        /* We're either at a speed of zero or out of bounds.
-         * Set M2_IN1 and M2_IN2 to zero. */
+        /* We're either at a speed of zero or out of bounds. */
+#if DISABLE_PWM
+        /* Simply disable the motor all of the time. */
+        M2_PWM_DC = 0x00;
+#else
+        /* Set M2_IN1 and M2_IN2 to zero. */
         M2_IN1_DC = 0x00;
         M2_IN2_DC = 0x00;
+#endif /* DISABLE_PWM */
     }
 }
 
@@ -127,6 +169,8 @@ void setEnableM2(uint8_t state) {
 }
 
 void setDisableM1(uint8_t state) {
+#if DISABLE_PWM
+#else
     /* Controls the state of the disable pin.
      * Setting the disable high will disable the H-bridge and 
      * put the outputs in Hi-Z mode. */
@@ -135,9 +179,12 @@ void setDisableM1(uint8_t state) {
     } else {
         M1_REG |= M1_DISABLE;
     }
+#endif /* DISABLE_PWM */
 }
 
 void setDisableM2(uint8_t state) {
+#if DISABLE_PWM
+#else
     /* Controls the state of the disable pin.
      * Setting the disable high will disable the H-bridge and 
      * put the outputs in Hi-Z mode. */
@@ -146,4 +193,5 @@ void setDisableM2(uint8_t state) {
     } else {
         M2_REG |= M2_DISABLE;
     }
+#endif /* DISABLE_PWM */
 }
