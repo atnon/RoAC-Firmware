@@ -14,4 +14,5 @@ void cmdGet(uint8_t *bufPtr);
 void setProperty(uint8_t propIndex, int8_t value);
 
 void uartPutHex(uint16_t num);
+void uart1PutHex(uint16_t num);
 #endif /* CMD_H_ */

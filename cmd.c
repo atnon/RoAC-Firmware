@@ -37,7 +37,7 @@ void cmdParser(uint8_t *bufPtr) {
     switch(result) {
         case 1: cmdSet(strPtr); break;
         case 2: cmdGet(strPtr); break;
-        default: uart_puts_P("Invalid command\r\n");
+        default: uart1_puts_P("Invalid command\r\n");
     }
 }
 
@@ -46,7 +46,7 @@ void cmdSet(uint8_t *bufPtr) {
     int8_t value;
 
     /* Make sure another parameter is coming. */
-    if(strPtr[0] != 0x20) { uart_puts_P("Error: Set requires at least 2 parameters.\r\n"); return; }
+    if(strPtr[0] != 0x20) { uart1_puts_P("Error: Set requires at least 2 parameters.\r\n"); return; }
     strPtr++; /* Jump across the space. */
     
     /* Get the next parameter / property. */
@@ -54,7 +54,7 @@ void cmdSet(uint8_t *bufPtr) {
     uint8_t result = (uint8_t)compareStrs(strPtr, cmdPropList, len, 1);
     //strPtr++; /* Jump across the space to the value. */
     strPtr += len;
-    if(strPtr[0] != 0x20) { uart_puts_P("Error: Set requires at least 2 parameters.\r\n"); return; }
+    if(strPtr[0] != 0x20) { uart1_puts_P("Error: Set requires at least 2 parameters.\r\n"); return; }
     strPtr++; /* Jump across the space. */
 
     len = getEndOfPart(strPtr);
@@ -63,11 +63,11 @@ void cmdSet(uint8_t *bufPtr) {
          * This would be better to handle in astring.c. */
         strPtr++; /* Jump the pesky dash. */
         value = getInteger(strPtr, len-1);
-        if(value == -1) { uart_puts_P("Error: Expected ninteger.\r\n"); return;}
+        if(value == -1) { uart1_puts_P("Error: Expected ninteger.\r\n"); return;}
         value = -value;
     } else {
         value = getInteger(strPtr, len);
-        if(value == -1) { uart_puts_P("Error: Expected integer.\r\n"); return;}
+        if(value == -1) { uart1_puts_P("Error: Expected integer.\r\n"); return;}
     }
 
     setProperty(result, value);
@@ -79,7 +79,7 @@ void cmdGet(uint8_t *bufPtr) {
     uint8_t *strPtr = bufPtr;
     
     /* Make sure another parameter is coming. */
-    if(strPtr[0] != 0x20) { uart_puts_P("Error: Get requires a property to fetch.\r\n"); return; }
+    if(strPtr[0] != 0x20) { uart1_puts_P("Error: Get requires a property to fetch.\r\n"); return; }
     strPtr++; /* Jump space. */
     
     uint8_t len = getEndOfPart(strPtr);
@@ -105,7 +105,7 @@ void cmdGet(uint8_t *bufPtr) {
         case 3: 
             /* m1disable */
 #if DISABLE_PWM
-            uart_puts_P("Error: Not implemented\r\n");
+            uart1_puts_P("Error: Not implemented\r\n");
 #else
             uartPutHex(0x1&(M1_PIN>>PA1));
 #endif /* DISABLE_PWM */
@@ -113,26 +113,26 @@ void cmdGet(uint8_t *bufPtr) {
         case 4: 
             /* m2disable */
 #if DISABLE_PWM
-            uart_puts_P("Error: Not implemented\r\n");
+            uart1_puts_P("Error: Not implemented\r\n");
 #else
             uartPutHex(0x1&(M2_PIN>>PA5));
 #endif /* DISABLE_PWM */
             break;
         case 5:
             /* led1 */
-            uart_puts_P("Error: Not Implemented.\r\n"); /* TODO */
+            uart1_puts_P("Error: Not Implemented.\r\n"); /* TODO */
             break;
         case 6: 
             /* led2 */
-            uart_puts_P("Error: Not Implemented.\r\n"); /* TODO */
+            uart1_puts_P("Error: Not Implemented.\r\n"); /* TODO */
             break;
         case 7: 
             /* led3 */
-            uart_puts_P("Error: Not Implemented.\r\n"); /* TODO */
+            uart1_puts_P("Error: Not Implemented.\r\n"); /* TODO */
             break;
         case 8: 
             /* led4 */
-            uart_puts_P("Error: Not Implemented.\r\n"); /* TODO */
+            uart1_puts_P("Error: Not Implemented.\r\n"); /* TODO */
             break;
         case 9:
             /* m1current */
@@ -144,7 +144,7 @@ void cmdGet(uint8_t *bufPtr) {
             break;
         default:
             /* Invalid command. */
-            uart_puts_P("Error: Invalid property.\r\n");
+            uart1_puts_P("Error: Invalid property.\r\n");
     }
 }
 
@@ -168,31 +168,31 @@ void setProperty(uint8_t propIndex, int8_t value) {
             break;
         case 5:
             /* led1 */
-            uart_puts_P("Error: Not Implemented.\r\n"); /* TODO */
+            uart1_puts_P("Error: Not Implemented.\r\n"); /* TODO */
             break;
         case 6: 
             /* led2 */
-            uart_puts_P("Error: Not Implemented.\r\n"); /* TODO */
+            uart1_puts_P("Error: Not Implemented.\r\n"); /* TODO */
             break;
         case 7: 
             /* led3 */
-            uart_puts_P("Error: Not Implemented.\r\n"); /* TODO */
+            uart1_puts_P("Error: Not Implemented.\r\n"); /* TODO */
             break;
         case 8: 
             /* led4 */
-            uart_puts_P("Error: Not Implemented.\r\n"); /* TODO */
+            uart1_puts_P("Error: Not Implemented.\r\n"); /* TODO */
             break;
         case 9:
             /* m1current */
-            uart_puts_P("Error: Non-valid Action.\r\n");
+            uart1_puts_P("Error: Non-valid Action.\r\n");
             break;
         case 10:
             /* m2current */
-            uart_puts_P("Error: Non-valid Action.\r\n");
+            uart1_puts_P("Error: Non-valid Action.\r\n");
             break;
         default: 
             /* Invalid command. */
-            uart_puts_P("Error: Invalid property.\r\n");
+            uart1_puts_P("Error: Invalid property.\r\n");
     }
 }
 
@@ -204,3 +204,10 @@ void uartPutHex(uint16_t num) {
     uart_puts_P("\r\n");
 }
 
+void uart1PutHex(uint16_t num) {
+    uint8_t buf[4];
+    sprintf(buf, "%X", num);
+    uart1_puts_P("0x");
+    uart1_puts(buf);
+    uart1_puts_P("\r\n");
+}
