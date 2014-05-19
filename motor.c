@@ -154,10 +154,18 @@ void setEnableM1(uint8_t state) {
      * The function also controls weather the PWM is active or not. */
     if (state == 0) {
         M1_REG &= ~(M1_ENABLE);
+#if DISABLE_PWM
+        TCCR0A &= ~(1<<COM0A1); /* Disable OC0A. */
+#else
         TCCR0A &= ~((1<<COM0A1) | (1<<COM0B1)); /* Disable OC0A,OC0B. */
+#endif /* DISABLE_PWM */
     } else {
         M1_REG |= M1_ENABLE;
+#if DISABLE_PWM
+        TCCR0A |= (1<<COM0A1); /* Enable OC0A. */
+#else
         TCCR0A |= ((1<<COM0A1) | (1<<COM0B1)); /* Enable OC0A, OC0B. */
+#endif /* DISABLE_PWM */
     }
 }
 
@@ -167,10 +175,18 @@ void setEnableM2(uint8_t state) {
      * The function also controls weather the PWM is active or not. */
     if (state == 0) {
         M2_REG &= ~(M2_ENABLE);
+#if DISABLE_PWM
+        TCCR1A &= ~(1<<COM1A1); /* Disable OC1A. */
+#else
         TCCR1A &= ~((1<<COM1A1) | (1<<COM1B1)); /* Disable OC1A,OC1B. */
+#endif /* DISABLE_PWM */
     } else {
         M2_REG |= M2_ENABLE;
+#if DISABLE_PWM
+        TCCR1A |= (1<<COM1A1); /* Enable OC1A. */
+#else
         TCCR1A |= ((1<<COM1A1) | (1<<COM1B1)); /* Enable OC1A, OC1B. */
+#endif /* DISABLE_PWM */
     }
 }
 
