@@ -113,8 +113,8 @@ void setSpeedM2(int8_t speed) {
         /* Forward. */
 #if DISABLE_PWM
         /* Set M1_IN2 high, M1_IN1 low. */
-        M2_REG &= ~(M2_IN1);
-        M2_PWMREG |= M2_IN2;
+        M2_REG |= M2_IN1;
+        M2_PWMREG &= ~(M2_IN2);
         M2_PWM_DC = (0xFF-((-speed)<<1)-1); /* Limit values 1:2:255 */
 #else
         /* Set M2_IN1 to prefered duty cycle.
@@ -126,8 +126,8 @@ void setSpeedM2(int8_t speed) {
         /* Reverse. */
 #if DISABLE_PWM
         /* Set M1_IN1 high, M1_IN2 low. */
-        M2_REG |= M2_IN1;
-        M2_PWMREG &= ~(M2_IN2);
+        M2_REG &= ~(M2_IN1);
+        M2_PWMREG |= M2_IN2;
         M2_PWM_DC = (0xFF-(speed<<1));
 #else
         /* Set M2_IN1 to 0.
